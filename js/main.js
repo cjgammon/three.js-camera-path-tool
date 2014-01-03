@@ -5,10 +5,12 @@ var camera,
 	mesh,
 	mat,
 	path,
+	controls,
 	vertices = [],
 	verticeHandles = [],
 	selectedHandle,
 	segments = [],
+	time,
 	windowHalfX = window.innerWidth / 2,
 	windowHalfY = window.innerHeight / 2,
 	keys = [],
@@ -33,7 +35,12 @@ function init() {
 
 	renderer = new THREE.WebGLRenderer({antialias: true});
 	renderer.setSize(window.innerWidth, window.innerHeight);
-	  
+	
+	var axis = new THREE.AxisHelper(75);
+	scene.add(axis);
+	
+	controls = new THREE.EditorControls(camera);
+					
 	document.body.appendChild(renderer.domElement);
 	document.addEventListener('mousedown', handle_MOUSE_DOWN);
 	document.addEventListener('mouseup', handle_MOUSE_UP);
@@ -121,12 +128,13 @@ function handle_KEY_UP(e) {
 
 function KEY_CHECK() {
 	if (!selectedHandle) {
-		navigateScene();
+		return;
 	} else {
 		moveSelectedHandle();
 	}
 }
 
+/*
 function navigateScene() {
 	var i,
 		amt = 1;
@@ -173,9 +181,16 @@ function navigateScene() {
 		case 83: //S
 			camera.rotation.x += amt / Math.PI / 100;
 			break;
+		case 68: //D
+			camera.rotation.y += amt / Math.PI / 100;
+			break;
+		case 65: //A
+			camera.rotation.y -= amt / Math.PI / 100;
+			break;
 		}
 	}
 }
+*/
 
 function moveSelectedHandle() {
 	var i,
@@ -270,19 +285,19 @@ function drawPath() {
 		}
 	}
 	
-	geometry = new THREE.TubeGeometry(path, 100, 2, 10, false, false);
+	geometry = new THREE.TubeGeometry(path, 100, 3, 20, false, false);
 	mat = new THREE.MeshBasicMaterial({color: 0xccc000, wireframe: true});
 	mesh = new THREE.Mesh(geometry, mat);
 	scene.add(mesh);
 }
 
 function render() {
-	renderer.render( scene, camera );
+	renderer.render(scene, camera);	
 }
 
 function animate() {
-	render();
 	requestAnimationFrame(animate); 
+	render();
 }
 
 var Vert = function (x, y, z) {
