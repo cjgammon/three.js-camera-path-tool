@@ -95,7 +95,11 @@ function handle_KEY_DOWN(e) {
 	
 	switch(e.keyCode) {
 	case 187: //=
-		addPath();
+		if (vertices.length == 0) {
+			addPath(6);	
+		} else {
+			addPath(5);
+		}
 		drawPath();
 		break;
 	case 189: //-
@@ -219,10 +223,10 @@ function moveSelectedHandle() {
 	selectedHandle.obj.update();
 }
 
-function addPath() {
+function addPath(count) {
 	var i;
 	
-	for (i = 0; i < 6; i += 1) {
+	for (i = 0; i < count; i += 1) {
 		vert = new Vert(Math.random() * 200, Math.random() * 200, Math.random() * 200);
 		vert.mesh.obj = vert;
 		vertices.push(vert);
@@ -232,7 +236,8 @@ function addPath() {
 
 function removePath() {
 	var removedVertices,
-	 	removedHandles;
+	 	removedHandles,
+		i;
 	
 	removedVertices = vertices.splice(vertices.length - 6, 6);
 	removedHandles = verticeHandles.splice(verticeHandles.length - 6, 6);
@@ -256,10 +261,12 @@ function drawPath() {
 		j += 1;
 		
 		if (j == 6) {
-			j = 0;
+			j = 1;
 			spline = new THREE.SplineCurve3(splineVectors);
 			path.add(spline);
+			
 			splineVectors = [];
+			splineVectors.push(vertices[i].v);
 		}
 	}
 	
