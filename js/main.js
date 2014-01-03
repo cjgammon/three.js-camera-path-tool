@@ -5,6 +5,7 @@ var camera,
 	mesh,
 	mat,
 	path,
+	vertices = [],
 	verticeHandles = [],
 	selectedHandle,
 	segments = [],
@@ -94,11 +95,8 @@ function handle_KEY_DOWN(e) {
 	
 	switch(e.keyCode) {
 	case 65: //A
-		if (typeof(path) !== 'undefined') {
-			addSegment();
-		} else {
-			createPath();	
-		}
+		addPath();
+		drawPath();
 		break;
 	}
 }
@@ -217,46 +215,40 @@ function moveSelectedHandle() {
 	selectedHandle.obj.update();
 }
 
-function createPath() {
-	var segment;
+function addPath() {
+	var i;
 	
-	segment = new Spline();
-	segments.push(segment)
+	for (i = 0; i < 6; i += 1) {
+		vert = new Vert(Math.random() * 200, Math.random() * 200, Math.random() * 200);
+		vert.mesh.obj = vert;
+		vertices.push(vert);
+		verticeHandles.push(vert.mesh);
+	}	
+}
+
+function drawPath() {
+	var i,
+		j = 0,
+		splineVectors = [];
+	
+	scene.remove(mesh) //clear path
 	
 	path = new THREE.CurvePath();
-	path.add(segment.spline);
+	
+	for (i = 0; i < vertices.length; i += 1) {
+		splineVectors.push(vertices[i].v);
+		j += 1;
+		
+		if (j == 6) {
+			j = 0;
+			spline = new THREE.SplineCurve3(splineVectors);
+			path.add(spline);
+			splineVectors = [];
+		}
+	}
 	
 	geometry = new THREE.TubeGeometry(path, 100, 2, 10, false, false);
 	mat = new THREE.MeshBasicMaterial({color: 0xccc000, wireframe: true});
-	mesh = new THREE.Mesh(geometry, mat);
-	scene.add(mesh);
-}
-
-function addSegment() {
-	var segment;
-	
-	scene.remove(mesh);
-	
-	segment = new Spline();
-	segments.push(segment)
-	path.add(segment.spline);
-	
-	geometry = new THREE.TubeGeometry(path, 100, 2, 10, false, false);
-	mesh = new THREE.Mesh(geometry, mat);
-	scene.add(mesh);
-}
-
-function updatePath() {
-	var i;
-	
-	scene.remove(mesh);
-	
-	path = new THREE.CurvePath();
-	for (i = 0; i < segments.length; i += 1) {
-		path.add(segments[i].spline);
-	}
-		
-	geometry = new THREE.TubeGeometry(path, 100, 2, 10, false, false);
 	mesh = new THREE.Mesh(geometry, mat);
 	scene.add(mesh);
 }
@@ -268,37 +260,6 @@ function render() {
 function animate() {
 	render();
 	requestAnimationFrame(animate); 
-}
-
-var Spline = function () {
-	var i,
-		vert,
-		splineVectors,
-		instance = this;
-	
-	this.vectors = [];
-	this.verts = [];
-	
-	for (i = 0; i < 6; i += 1) {
-		vert = new Vert(Math.random() * 200, Math.random() * 200, Math.random() * 200);
-		this.verts.push(vert);
-		vert.mesh.obj = vert;
-		vert.spline = this;
-		verticeHandles.push(vert.mesh);
-		this.vectors.push(vert.v);
-	}
-	
-	this.spline = new THREE.SplineCurve3(this.vectors);
-	
-	this.update = function () {
-		instance.vectors = [];
-		
-		for (i = 0; i < instance.verts.length; i += 1) {
-			instance.vectors.push(instance.verts[i].v);
-		}
-		
-		instance.spline = new THREE.SplineCurve3(instance.vectors);
-	}
 }
 
 var Vert = function (x, y, z) {
@@ -323,8 +284,7 @@ var Vert = function (x, y, z) {
 		instance.z = instance.mesh.position.z;
 		
 		instance.v = new THREE.Vector3(instance.x, instance.y, instance.z);
-		instance.spline.update();
-		updatePath();
+		drawPath();
 	}
 }
 
