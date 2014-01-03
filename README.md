@@ -8,7 +8,7 @@ KEY CONTROLS
 ------------
 
 =  Add Path
--  Remove Path
+\-  Remove Path
 UP/DOWN/LEFT/RIGHT  Pan Camera
 OPTION + UP/DOWN  Zoom Camera
 W/A/S/D  Rotate Camera
