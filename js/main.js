@@ -94,8 +94,12 @@ function handle_KEY_DOWN(e) {
 	}
 	
 	switch(e.keyCode) {
-	case 65: //A
+	case 187: //=
 		addPath();
+		drawPath();
+		break;
+	case 189: //-
+		removePath();
 		drawPath();
 		break;
 	}
@@ -224,6 +228,18 @@ function addPath() {
 		vertices.push(vert);
 		verticeHandles.push(vert.mesh);
 	}	
+}
+
+function removePath() {
+	var removedVertices,
+	 	removedHandles;
+	
+	removedVertices = vertices.splice(vertices.length - 6, 6);
+	removedHandles = verticeHandles.splice(verticeHandles.length - 6, 6);
+	
+	for (i = 0; i < removedHandles.length; i += 1) {
+		scene.remove(removedHandles[i]);
+	}
 }
 
 function drawPath() {
