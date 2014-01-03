@@ -11,16 +11,17 @@ KEY CONTROLS
 
 \-  Remove Path
 
-UP/DOWN/LEFT/RIGHT  Pan Camera
-
-OPTION + UP/DOWN  Zoom Camera
-
-W/A/S/D  Rotate Camera
-
-SHIFT  Moves Faster
-
-
+Click and drag to rotate camera
+Use Mouse Wheel to Zoom In/Out
 
 Click Nodes to Move
 
 Click off Node to Deselect
+
+UP/DOWN/LEFT/RIGHT  Translate Node on Y or X Axis
+
+OPTION + UP/DOWN  Translate Node on Z Axis
+
+W/A/S/D  Rotate Node
+
+SHIFT  Moves Faster
