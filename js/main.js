@@ -72,8 +72,26 @@ function handle_loadButton_CLICK(e) {
 }
 
 function handle_saveButton_CLICK(e) {
-	var blob = new Blob(["Hello, world!"], {type: "text/plain;charset=utf-8"});
-	saveAs(blob, "hello world.txt");
+	var filestring = "",
+		blob,
+		i;
+	
+	filestring += "[\n";
+	
+	for (i = 0; i < vertices.length; i += 1) {
+		filestring += "{x: " + vertices[i].x + ", y: " + vertices[i].y  + ", z: " + vertices[i].z + "}";
+		
+		if (i !== vertices.length - 1) {
+			filestring += ',\n';
+		} else {
+			filestring += '\n';	
+		}
+	}
+	
+	filestring += "]";
+	
+	blob = new Blob([filestring], {type: "text/plain;charset=utf-8"});
+	saveAs(blob);
 }
 
 function handle_codeButton_CLICK(e) {
