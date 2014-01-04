@@ -13,19 +13,6 @@
 				overflow: hidden;
 			}
 			
-			#webgl-view{
-				position: fixed;
-				top: 0;
-				left: 0;
-			}
-			
-			#dom-view{
-				position: fixed;
-				top: 0;
-				left: 0;
-				z-index: 2;
-			}
-			
 			#code{
 				display: none;
 				position: fixed;
@@ -34,18 +21,76 @@
 				top: 0;
 				width: 50%;
 				height: 100vh;
-				padding: 2em;
+				padding: 5em 2em 1em;
 				font-family: courier;
-				background: rgba(0, 0, 0, 0.5);
+				color: white;
+				background: rgba(0, 0, 0, 0.8);
 				z-index: 10;
 				overflow: auto;
+			}
+			
+			#ui{
+				display: none;
+				position: fixed;
+				right: 0;
+				top: 0;
+				width: 25%;
+				height: 100vh;
+				padding: 1em;
+				color: white;
+				font-family: helvetica, sans-serif;
+				background: rgba(0, 0, 0, 0.8);
+				z-index: 10;
+			}
+			
+			#codeButton, #helpButton{
+				position: absolute;
+				top: 2em;
+				right: 2em;
+			}
+			
+			#helpButton{
+				width: 30px;
+				height: 30px;
+				border: 1px solid black;
+				border-radius: 30px;
+			}
+			
+			.button{
+				padding: .5em 1em;
+				border-radius: 5px;
+				border: none;
+				font-weight: bold;
+				background: white;
+				cursor: pointer;	
 			}
 		</style>
 	</head>
 	<body>
+		<button id="helpButton" class="button">?</button>
+
+		<div id="ui">
+			<button id="loadButton" class="button">Load</button>
+			<button id="saveButton" class="button">Save</button>
+			<div>
+				<h3>Instructions</h3>
+				<small>
+					<p>Click a Node to Move</p>
+					<table>
+						<tr><td><strong>H</strong></td><td>Toggle Code View</td></tr>
+						<tr><td><strong>UP/DOWN</strong></td><td>Y Axis</td></tr>
+						<tr><td><strong>LEFT/RIGHT</strong></td><td>X Axis</td></tr>
+						<tr><td><strong>OPTION + UP/DOWN</strong></td><td>Z Axis</td></tr>
+						<tr><td><strong>SHIFT</strong></td><td>Speed Up</td></tr>
+						
+					</table>
+				</small>
+			</div>
+		</div>
 		
-		<div id="code" contenteditable="true">
-			code here
+		<div id="code">
+			<button id="codeButton" class="button">Select</button>
+			<div id="codeCopy"></div>
 		</div>
 		
 		<script src="js/threejs/build/three.js"></script>

@@ -5,13 +5,15 @@ var camera,
 	mesh,
 	mat,
 	path,
+	pathCamera,
 	controls,
 	vertices = [],
 	verticeHandles = [],
-	selectedHandle,
 	segments = [],
-	time,
+	selectedHandle,
 	codeElement = document.getElementById('code'),
+	codeCopyElement = document.getElementById('codeCopy'),
+	codeButton = document.getElementById('codeButton'),
 	windowHalfX = window.innerWidth / 2,
 	windowHalfY = window.innerHeight / 2,
 	keys = [],
@@ -28,6 +30,9 @@ function init() {
 	camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.01, 1000);
 	camera.position.set(0, 50, 500);
 
+	pathCamera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.01, 1000);
+	pathCamera.position.set(0, 50, 500);
+
 	scene = new THREE.Scene();
 
 	var light = new THREE.DirectionalLight(0xffffff);
@@ -41,7 +46,9 @@ function init() {
 	scene.add(axis);
 	
 	controls = new THREE.EditorControls(camera);
-					
+	
+	codeButton.addEventListener('click', handle_codeButton_CLICK);
+	
 	document.body.appendChild(renderer.domElement);
 	document.addEventListener('mousedown', handle_MOUSE_DOWN);
 	document.addEventListener('mouseup', handle_MOUSE_UP);
@@ -50,6 +57,15 @@ function init() {
 	document.addEventListener('keydown', handle_KEY_DOWN);
 	document.addEventListener('keyup', handle_KEY_UP);
 	setInterval(KEY_CHECK, 100);
+}
+
+function handle_codeButton_CLICK(e) {
+	var range = document.createRange();
+	range.selectNodeContents(codeCopyElement);
+	
+	var sel = window.getSelection();
+	sel.removeAllRanges();
+	sel.addRange(range);
 }
 
 function resetSelected() {
@@ -198,7 +214,7 @@ function addPath(count) {
 	var i;
 	
 	for (i = 0; i < count; i += 1) {
-		vert = new Vert(Math.random() * 200, Math.random() * 200, Math.random() * 200);
+		vert = new Vert(Math.floor(Math.random() * 200), Math.floor(Math.random() * 200), Math.floor(Math.random() * 200));
 		vert.mesh.obj = vert;
 		vertices.push(vert);
 		verticeHandles.push(vert.mesh);
@@ -298,11 +314,21 @@ function generatePathCode() {
 	codeString += "var m = new THREE.MeshBasicMaterial({color: 0xccc000, wireframe: true});<br/>";
 	codeString += "var mesh = new THREE.Mesh(g, m);<br/>";
 	
-	codeElement.innerHTML = codeString;
+	codeCopyElement.innerHTML = codeString;
 }
 
 function render() {
+	renderer.setViewport(0, 0, window.innerWidth * 2, window.innerHeight * 2);
+	renderer.setScissor(0, 0, window.innerWidth * 2, window.innerHeight * 2);
+	renderer.enableScissorTest(true);
+	renderer.setClearColor(0xffffff);
 	renderer.render(scene, camera);	
+	
+	renderer.setViewport((window.innerWidth * 2) - 500, 0, 500, 300);
+	renderer.setScissor((window.innerWidth * 2) - 500, 0, 500, 300);
+	renderer.enableScissorTest(true);
+	renderer.setClearColor(0x111111, 0.1);
+	renderer.render(scene, pathCamera);
 }
 
 function animate() {
@@ -336,4 +362,3 @@ var Vert = function (x, y, z) {
 		generatePathCode();
 	}
 }
-
