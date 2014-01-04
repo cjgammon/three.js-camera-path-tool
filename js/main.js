@@ -17,6 +17,8 @@ var camera,
 	uiElement = document.getElementById('ui'),
 	codeButton = document.getElementById('codeButton'),
 	helpButton = document.getElementById('helpButton'),
+	loadButton = document.getElementById('loadButton'),
+	saveButton = document.getElementById('saveButton'),
 	windowHalfX = window.innerWidth / 2,
 	windowHalfY = window.innerHeight / 2,
 	keys = [],
@@ -52,6 +54,8 @@ function init() {
 	
 	codeButton.addEventListener('click', handle_codeButton_CLICK);
 	helpButton.addEventListener('click', handle_helpButton_CLICK);
+	loadButton.addEventListener('click', handle_loadButton_CLICK);
+	saveButton.addEventListener('click', handle_saveButton_CLICK);
 	
 	document.body.appendChild(renderer.domElement);
 	document.addEventListener('mousedown', handle_MOUSE_DOWN);
@@ -61,6 +65,15 @@ function init() {
 	document.addEventListener('keydown', handle_KEY_DOWN);
 	document.addEventListener('keyup', handle_KEY_UP);
 	setInterval(KEY_CHECK, 100);
+}
+
+function handle_loadButton_CLICK(e) {
+	
+}
+
+function handle_saveButton_CLICK(e) {
+	var blob = new Blob(["Hello, world!"], {type: "text/plain;charset=utf-8"});
+	saveAs(blob, "hello world.txt");
 }
 
 function handle_codeButton_CLICK(e) {
@@ -363,7 +376,7 @@ function render() {
 	renderer.setViewport((window.innerWidth * 2) - 500, 0, 500, 300);
 	renderer.setScissor((window.innerWidth * 2) - 500, 0, 500, 300);
 	renderer.enableScissorTest(true);
-	renderer.setClearColor(0x111111, 0.1);
+	renderer.setClearColor(0x111115, 0.1);
 	renderer.render(scene, pathCamera);
 }
 
