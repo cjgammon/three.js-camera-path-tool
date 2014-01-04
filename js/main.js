@@ -205,10 +205,19 @@ function addPath(count) {
 function removePath() {
 	var removedVertices,
 	 	removedHandles,
-		i;
+		i,
+		amt;
 	
-	removedVertices = vertices.splice(vertices.length - 6, 6);
-	removedHandles = verticeHandles.splice(verticeHandles.length - 6, 6);
+	if (vertices.length < 1) {
+		return;
+	} else if (vertices.length > 6) {
+		amt = 5;
+	} else {
+		amt = 6;
+	}
+	
+	removedVertices = vertices.splice(vertices.length - amt, amt);
+	removedHandles = verticeHandles.splice(verticeHandles.length - amt, amt);
 	
 	for (i = 0; i < removedHandles.length; i += 1) {
 		scene.remove(removedHandles[i]);
