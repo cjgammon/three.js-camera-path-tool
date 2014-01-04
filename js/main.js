@@ -13,7 +13,9 @@ var camera,
 	selectedHandle,
 	codeElement = document.getElementById('code'),
 	codeCopyElement = document.getElementById('codeCopy'),
+	uiElement = document.getElementById('ui'),
 	codeButton = document.getElementById('codeButton'),
+	helpButton = document.getElementById('helpButton'),
 	windowHalfX = window.innerWidth / 2,
 	windowHalfY = window.innerHeight / 2,
 	keys = [],
@@ -48,6 +50,7 @@ function init() {
 	controls = new THREE.EditorControls(camera);
 	
 	codeButton.addEventListener('click', handle_codeButton_CLICK);
+	helpButton.addEventListener('click', handle_helpButton_CLICK);
 	
 	document.body.appendChild(renderer.domElement);
 	document.addEventListener('mousedown', handle_MOUSE_DOWN);
@@ -66,6 +69,14 @@ function handle_codeButton_CLICK(e) {
 	var sel = window.getSelection();
 	sel.removeAllRanges();
 	sel.addRange(range);
+}
+
+function handle_helpButton_CLICK(e) {
+	if (uiElement.style.display == 'block') {
+		uiElement.style.display = 'none';
+	} else {
+		uiElement.style.display = 'block';
+	}
 }
 
 function resetSelected() {
