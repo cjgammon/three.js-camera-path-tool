@@ -3,6 +3,7 @@ var camera,
 	renderer, 
 	projector,
 	mesh,
+	geometry,
 	mat,
 	path,
 	pathCamera,
@@ -328,7 +329,31 @@ function generatePathCode() {
 	codeCopyElement.innerHTML = codeString;
 }
 
+function positionPathCamera() {
+	if (!geometry) {
+		return;
+	}
+	
+	var time = Date.now();
+	var looptime = 20 * 1000;
+	var t = ( time % looptime ) / looptime;
+	
+	var pos = geometry.path.getPointAt(t);
+	var dir = geometry.path.getTangentAt(t);
+	var normal = new THREE.Vector3();
+	
+	pathCamera.position = pos;
+	
+	var lookAt = geometry.path.getPointAt( ( t + 30 / geometry.path.getLength() ) % 1 );
+	lookAt.copy( pos ).add( dir );
+	pathCamera.matrix.lookAt(pathCamera.position, lookAt, normal);
+	pathCamera.rotation.setEulerFromRotationMatrix( pathCamera.matrix, pathCamera.eulerOrder );
+	
+}
+
 function render() {
+	positionPathCamera();
+	
 	renderer.setViewport(0, 0, window.innerWidth * 2, window.innerHeight * 2);
 	renderer.setScissor(0, 0, window.innerWidth * 2, window.innerHeight * 2);
 	renderer.enableScissorTest(true);
@@ -343,7 +368,7 @@ function render() {
 }
 
 function animate() {
-	requestAnimationFrame(animate); 
+	requestAnimationFrame(animate);
 	render();
 }
 
