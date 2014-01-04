@@ -222,6 +222,8 @@ function removePath() {
 	for (i = 0; i < removedHandles.length; i += 1) {
 		scene.remove(removedHandles[i]);
 	}
+	
+	generatePathCode();
 }
 
 function drawPath() {
@@ -261,7 +263,7 @@ function generatePathCode() {
 		splineVectors = [];
 		codeString = "";
 	
-	codeString += "var path = new THREE.CurvePath();<br/>";
+	codeString += "var path = new THREE.CurvePath();<br/><br/>";
 	
 	for (i = 0; i < vertices.length; i += 1) {
 		splineVectors.push(vertices[i].v);
@@ -277,12 +279,12 @@ function generatePathCode() {
 				if (k < splineVectors.length - 1) {
 					codeString += ", <br/>";
 				} else {
-					codeString += "<br/>]<br/>";
+					codeString += "<br/>]<br/><br/>";
 				}
 			}
 			
 			codeString += "var spline" + m + " = new THREE.SplineCurve3(vectors" + m + ");<br/>";
-			codeString += "path.add(spline" + m + ");<br/>";
+			codeString += "path.add(spline" + m + ");<br/><br/>";
 			
 			splineVectors = [];
 			splineVectors.push(vertices[i].v);
