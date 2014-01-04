@@ -124,6 +124,9 @@ function handle_KEY_DOWN(e) {
 			codeElement.style.display = 'block';
 		}
 		break;
+	case 32: //SPACE
+		//TOGGLE CAMERA
+		break;
 	}
 }
 
@@ -275,7 +278,7 @@ function generatePathCode() {
 			
 			codeString += "var vectors" + m + " = [<br/>";
 			for (k = 0; k < splineVectors.length; k += 1) {
-				codeString += "new Vector3(" + splineVectors[k].x + ", " + splineVectors[k].y + ", " + splineVectors[k].z + ")";
+				codeString += "new THREE.Vector3(" + splineVectors[k].x + ", " + splineVectors[k].y + ", " + splineVectors[k].z + ")";
 				if (k < splineVectors.length - 1) {
 					codeString += ", <br/>";
 				} else {
