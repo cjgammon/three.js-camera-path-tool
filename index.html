@@ -26,19 +26,30 @@
 				z-index: 2;
 			}
 			
-			section{
-				width: 100px;
-				height: 100px;
-				background: red;
+			#code{
+				display: none;
+				position: fixed;
+				box-sizing: border-box;
+				left: 0;
+				top: 0;
+				width: 50%;
+				height: 100vh;
+				padding: 2em;
+				font-family: courier;
+				background: rgba(0, 0, 0, 0.5);
+				z-index: 10;
+				overflow: auto;
 			}
 		</style>
 	</head>
 	<body>
 		
+		<div id="code">
+			code here
+		</div>
+		
 		<script src="js/threejs/build/three.js"></script>
 		<script src="js/threejs/examples/js/controls/EditorControls.js"></script>
-		<script src="js/threejs/examples/js/controls/PointerLockControls.js"></script>
-		<script src="js/threejs/examples/js/controls/FirstPersonControls.js"></script>
 		<script src="js/threejs/examples/js/CurveExtras.js"></script>
 		<script src="js/main.js"></script>
 		

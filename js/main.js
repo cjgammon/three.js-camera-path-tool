@@ -11,6 +11,7 @@ var camera,
 	selectedHandle,
 	segments = [],
 	time,
+	codeElement = document.getElementById('code'),
 	windowHalfX = window.innerWidth / 2,
 	windowHalfY = window.innerHeight / 2,
 	keys = [],
@@ -94,6 +95,7 @@ function handle_KEY_DOWN(e) {
 	if (keys.length === 0) {
 		keys.push(e.keyCode);
 	}
+	
 	for (i = 0; i < keys.length; i += 1) {		
 		if (e.keyCode !== keys[i] && i == keys.length - 1) {
 			keys.push(e.keyCode);
@@ -108,10 +110,19 @@ function handle_KEY_DOWN(e) {
 			addPath(5);
 		}
 		drawPath();
+		generatePathCode();
 		break;
 	case 189: //-
 		removePath();
 		drawPath();
+		generatePathCode();
+		break;
+	case 72: //H
+		if (codeElement.style.display == 'block') {
+			codeElement.style.display = 'none';
+		} else {
+			codeElement.style.display = 'block';
+		}
 		break;
 	}
 }
@@ -133,64 +144,6 @@ function KEY_CHECK() {
 		moveSelectedHandle();
 	}
 }
-
-/*
-function navigateScene() {
-	var i,
-		amt = 1;
-		
-	SHIFT = false;
-	OPT = false;
-	
-	for (i = 0; i < keys.length; i += 1) {
-		if(keys[i] == 16) { //SHIFT
-			SHIFT = true;
-			amt = 10;
-		}
-		
-		if (keys[i] == 18) { //OPT
-			OPT = true;
-		}
-	}
-	
-	for (i = 0; i < keys.length; i += 1) {
-		switch(keys[i]) {
-		case 37: //LEFT
-			camera.position.x -= amt;
-			break;
-		case 39: //RIGHT
-			camera.position.x += amt;
-			break;
-		case 38: //UP
-			if (OPT) {
-				camera.position.z -= amt;
-			} else {
-				camera.position.y += amt;
-			}
-			break;
-		case 40: //DOWN
-			if (OPT) {
-				camera.position.z += amt;
-			} else {
-				camera.position.y -= amt;
-			}
-			break;
-		case 87: //W
-			camera.rotation.x -= amt / Math.PI / 100;
-			break;
-		case 83: //S
-			camera.rotation.x += amt / Math.PI / 100;
-			break;
-		case 68: //D
-			camera.rotation.y += amt / Math.PI / 100;
-			break;
-		case 65: //A
-			camera.rotation.y -= amt / Math.PI / 100;
-			break;
-		}
-	}
-}
-*/
 
 function moveSelectedHandle() {
 	var i,
@@ -291,6 +244,49 @@ function drawPath() {
 	scene.add(mesh);
 }
 
+function generatePathCode() {
+	var i, 
+		j = 0, 
+		k, 
+		m,
+		splineVectors = [];
+		codeString = "";
+	
+	codeString += "var path = new THREE.CurvePath();<br/>";
+	
+	for (i = 0; i < vertices.length; i += 1) {
+		splineVectors.push(vertices[i].v);
+		j += 1;
+		m = i / 5;
+		
+		if (j == 6) {
+			j = 1;
+			
+			codeString += "var vectors" + m + " = [<br/>";
+			for (k = 0; k < splineVectors.length; k += 1) {
+				codeString += "new Vector3(" + splineVectors[k].x + ", " + splineVectors[k].y + ", " + splineVectors[k].z + ")";
+				if (k < splineVectors.length - 1) {
+					codeString += ", <br/>";
+				} else {
+					codeString += "<br/>]<br/>";
+				}
+			}
+			
+			codeString += "var spline" + m + " = new THREE.SplineCurve3(vectors" + m + ");<br/>";
+			codeString += "path.add(spline" + m + ");<br/>";
+			
+			splineVectors = [];
+			splineVectors.push(vertices[i].v);
+		}
+	}
+	
+	codeString += "var g = new THREE.TubeGeometry(path, 100, 3, 20, false, false);<br/>";
+	codeString += "var m = new THREE.MeshBasicMaterial({color: 0xccc000, wireframe: true});<br/>";
+	codeString += "var mesh = new THREE.Mesh(g, m);<br/>";
+	
+	codeElement.innerHTML = codeString;
+}
+
 function render() {
 	renderer.render(scene, camera);	
 }
@@ -323,6 +319,7 @@ var Vert = function (x, y, z) {
 		
 		instance.v = new THREE.Vector3(instance.x, instance.y, instance.z);
 		drawPath();
+		generatePathCode();
 	}
 }
 
