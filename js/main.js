@@ -393,29 +393,13 @@ function drawPath() {
 	
 	path = new THREE.CurvePath();
 	
-	/*
 	for (i = 0; i < vertices.length; i += 1) {
 		splineVectors.push(vertices[i].v);
 	}
 	
-	path.add(new THREE.Spline(splineVectors));
-	*/
-	
-	
-	for (i = 0; i < vertices.length; i += 1) {
-		splineVectors.push(vertices[i].v);
-		j += 1;
+	spline = new THREE.SplineCurve3(splineVectors);
+	path.add(spline);
 		
-		if (j == 6) {
-			j = 1;
-			spline = new THREE.SplineCurve3(splineVectors);
-			path.add(spline);
-			
-			splineVectors = [];
-			splineVectors.push(vertices[i].v);
-		}
-	}
-	
 	geometry = new THREE.TubeGeometry(path, vertices.length * 20, 3, 20, false, false);
 	mat = new THREE.MeshBasicMaterial({color: 0xccc000, wireframe: true});
 	mesh = new THREE.Mesh(geometry, mat);
