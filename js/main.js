@@ -85,7 +85,10 @@ function handle_LOAD(e) {
 function handle_FILE_LOAD(e) {
 	var contentString = e.target.result;
 	var content = JSON.parse('{"vertices":' + contentString + '}');
-	console.log(content);
+	
+	loadPath(content.vertices);
+	drawPath();
+	generatePathCode();
 }
 
 function handle_saveButton_CLICK(e) {
@@ -126,13 +129,6 @@ function handle_helpButton_CLICK(e) {
 	} else {
 		uiElement.style.display = 'block';
 	}
-}
-
-function resetSelected() {
-	try{
-		selectedHandle.material.color.setHex(0x00cc00);
-	} catch(e) {};
-	selectedHandle = null;
 }
 
 function handle_MOUSE_DOWN(e) {
@@ -224,6 +220,13 @@ function KEY_CHECK() {
 	}
 }
 
+function resetSelected() {
+	try{
+		selectedHandle.material.color.setHex(0x00cc00);
+	} catch(e) {};
+	selectedHandle = null;
+}
+
 function moveSelectedHandle() {
 	var i,
 		amt = 1;
@@ -268,6 +271,21 @@ function moveSelectedHandle() {
 	}
 	
 	selectedHandle.obj.update();
+}
+
+function loadPath(v) {
+	var i;
+	
+	console.log(v);
+
+	for (i = 0; i < v.length; i += 1) {
+		console.log(v[i].x, v[i].y, v[i].z);
+
+		vert = new Vert(v[i].x, v[i].y, v[i].z);
+		vert.mesh.obj = vert;
+		vertices.push(vert);
+		verticeHandles.push(vert.mesh);		
+	}
 }
 
 function addPath(count) {
