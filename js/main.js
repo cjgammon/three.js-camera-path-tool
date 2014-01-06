@@ -83,8 +83,11 @@ function handle_LOAD(e) {
 }
 
 function handle_FILE_LOAD(e) {
-	var contentString = e.target.result;
-	var content = JSON.parse('{"vertices":' + contentString + '}');
+	var contentString,
+		content;
+		
+	contentString = e.target.result;
+	content = JSON.parse('{"vertices":' + contentString + '}');
 	
 	loadPath(content.vertices);
 	drawPath();
@@ -276,11 +279,7 @@ function moveSelectedHandle() {
 function loadPath(v) {
 	var i;
 	
-	console.log(v);
-
 	for (i = 0; i < v.length; i += 1) {
-		console.log(v[i].x, v[i].y, v[i].z);
-
 		vert = new Vert(v[i].x, v[i].y, v[i].z);
 		vert.mesh.obj = vert;
 		vertices.push(vert);
@@ -327,8 +326,12 @@ function drawPath() {
 	var i,
 		j = 0,
 		splineVectors = [];
-	
+		
 	scene.remove(mesh) //clear path
+	
+	if (vertices.length == 0) {
+		return;
+	}
 	
 	path = new THREE.CurvePath();
 	
@@ -396,25 +399,35 @@ function generatePathCode() {
 }
 
 function positionPathCamera() {
-	if (!geometry) {
+	if (vertices.length == 0) {
 		return;
 	}
 	
-	var time = Date.now();
-	var looptime = 20 * 1000;
-	var t = ( time % looptime ) / looptime;
+	var time, 
+		looptime, 
+		t, 
+		lookAt, 
+		pos, 
+		dir, 
+		normal,
+		pathLength;
 	
-	var pos = geometry.path.getPointAt(t);
-	var dir = geometry.path.getTangentAt(t);
-	var normal = new THREE.Vector3();
+	time = Date.now();
+	looptime = 20 * 1000;
+	t = ( time % looptime ) / looptime;
 	
+	pos = geometry.path.getPointAt(t);
+	dir = geometry.path.getTangentAt(t);
+	normal = new THREE.Vector3();
+
 	pathCamera.position = pos;
 	
-	var lookAt = geometry.path.getPointAt( ( t + 30 / geometry.path.getLength() ) % 1 );
+	pathLength = geometry.path.getLength();
+	lookAt = geometry.path.getPointAt( ( t + 30 / pathLength ) % 1 );
+		
 	lookAt.copy( pos ).add( dir );
 	pathCamera.matrix.lookAt(pathCamera.position, lookAt, normal);
 	pathCamera.rotation.setEulerFromRotationMatrix( pathCamera.matrix, pathCamera.eulerOrder );
-	
 }
 
 function render() {
