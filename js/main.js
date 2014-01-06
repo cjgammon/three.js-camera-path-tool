@@ -8,6 +8,7 @@ var camera,
 	path,
 	pathCamera,
 	cameraOnPath,
+	cameraHelper,
 	controls,
 	vertices = [],
 	verticeHandles = [],
@@ -388,6 +389,7 @@ function drawPath() {
 		
 	scene.remove(mesh) //clear path
 	scene.remove(cameraOnPath);
+	scene.remove(cameraHelper);
 	
 	if (vertices.length == 0) {
 		return;
@@ -407,10 +409,17 @@ function drawPath() {
 	mesh = new THREE.Mesh(geometry, mat);
 	scene.add(mesh);
 	
-	cameraOnPath = new THREE.CameraHelper(pathCamera);
+	addCameraToPath();
+	cameraHelper = new THREE.CameraHelper(pathCamera);
+	scene.add(cameraHelper);
+}
+
+function addCameraToPath() {
+	var g = new THREE.SphereGeometry(5, 5),
+		m = new THREE.MeshBasicMaterial({color: 0xff0000});
+		
+	cameraOnPath = new THREE.Mesh(g, m);
 	scene.add(cameraOnPath);
-	
-	console.log(cameraOnPath);
 }
 
 function generatePathCode() {
@@ -488,8 +497,18 @@ function positionPathCamera() {
 	pathCamera.rotation.setEulerFromRotationMatrix( pathCamera.matrix, pathCamera.eulerOrder );
 }
 
+function positionCameraOnPath() {
+	if (vertices.length == 0) {
+		return;
+	}
+	
+	cameraOnPath.position = pathCamera.position;
+	cameraOnPath.rotation = pathCamera.rotation;
+}
+
 function render() {
 	positionPathCamera();
+	positionCameraOnPath();
 	
 	renderer.setViewport(0, 0, window.innerWidth * 2, window.innerHeight * 2);
 	renderer.setScissor(0, 0, window.innerWidth * 2, window.innerHeight * 2);
