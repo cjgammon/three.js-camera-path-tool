@@ -117,7 +117,7 @@ function handle_MODEL_LOAD(e) {
 	for (i = 0; i < model.materials.length; i += 1) {
 		color = new THREE.Color(0xffffff);
 		color.setRGB(Math.random(), Math.random(), Math.random());
-		model.materials[i] = new THREE.MeshLambertMaterial({ambient: color, color: color, side: THREE.DoubleSide});
+		model.materials[i] = new THREE.MeshLambertMaterial({ambient: color, color: color, side: THREE.DoubleSide, shading: THREE.FlatShading});
 	}
 	mesh = new THREE.Mesh(model.geometry, new THREE.MeshFaceMaterial(model.materials));
 	mesh.scale.set(40, 40, 40);
