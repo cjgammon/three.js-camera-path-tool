@@ -7,6 +7,7 @@ var camera,
 	mat,
 	path,
 	pathCamera,
+	cameraOnPath,
 	controls,
 	vertices = [],
 	verticeHandles = [],
@@ -386,6 +387,7 @@ function drawPath() {
 		splineVectors = [];
 		
 	scene.remove(mesh) //clear path
+	scene.remove(cameraOnPath);
 	
 	if (vertices.length == 0) {
 		return;
@@ -405,6 +407,10 @@ function drawPath() {
 	mesh = new THREE.Mesh(geometry, mat);
 	scene.add(mesh);
 	
+	cameraOnPath = new THREE.CameraHelper(pathCamera);
+	scene.add(cameraOnPath);
+	
+	console.log(cameraOnPath);
 }
 
 function generatePathCode() {
