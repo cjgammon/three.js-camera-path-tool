@@ -19,6 +19,7 @@ var camera,
 	helpButton = document.getElementById('helpButton'),
 	loadButton = document.getElementById('loadButton'),
 	saveButton = document.getElementById('saveButton'),
+	fileInput = document.getElementById('fileInput'),
 	windowHalfX = window.innerWidth / 2,
 	windowHalfY = window.innerHeight / 2,
 	keys = [],
@@ -56,6 +57,7 @@ function init() {
 	helpButton.addEventListener('click', handle_helpButton_CLICK);
 	loadButton.addEventListener('click', handle_loadButton_CLICK);
 	saveButton.addEventListener('click', handle_saveButton_CLICK);
+	fileInput.addEventListener('change', handle_LOAD);
 	
 	document.body.appendChild(renderer.domElement);
 	document.addEventListener('mousedown', handle_MOUSE_DOWN);
@@ -68,18 +70,33 @@ function init() {
 }
 
 function handle_loadButton_CLICK(e) {
-	
+	var evt = document.createEvent("MouseEvents");
+	evt.initEvent("click", true, false);
+	fileInput.dispatchEvent(evt);
+}
+
+function handle_LOAD(e) {
+	var reader = new FileReader();
+	reader.addEventListener('load', handle_FILE_LOAD);
+	reader.readAsText(e.target.files[0]);
+    
+}
+
+function handle_FILE_LOAD(e) {
+	var contentString = e.target.result;
+	var content = JSON.parse('{"vertices":' + contentString + '}');
+	console.log(content);
 }
 
 function handle_saveButton_CLICK(e) {
-	var filestring = "",
+	var filestring = '',
 		blob,
 		i;
 	
-	filestring += "[\n";
+	filestring += '[\n';
 	
 	for (i = 0; i < vertices.length; i += 1) {
-		filestring += "{x: " + vertices[i].x + ", y: " + vertices[i].y  + ", z: " + vertices[i].z + "}";
+		filestring += '{"x": ' + vertices[i].x + ', "y": ' + vertices[i].y  + ', "z": ' + vertices[i].z + '}';
 		
 		if (i !== vertices.length - 1) {
 			filestring += ',\n';
@@ -88,10 +105,10 @@ function handle_saveButton_CLICK(e) {
 		}
 	}
 	
-	filestring += "]";
+	filestring += ']';
 	
 	blob = new Blob([filestring], {type: "text/plain;charset=utf-8"});
-	saveAs(blob);
+	saveAs(blob, "path.txt");
 }
 
 function handle_codeButton_CLICK(e) {
