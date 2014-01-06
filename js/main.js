@@ -33,7 +33,7 @@ animate();
 function init() {
   	projector = new THREE.Projector();
 
-	camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.01, 1000);
+	camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.01, 10000);
 	camera.position.set(0, 50, 500);
 
 	pathCamera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.01, 1000);
@@ -44,6 +44,9 @@ function init() {
 	var light = new THREE.DirectionalLight(0xffffff);
 	light.position.set(0, 0, 1);
 	scene.add(light);
+	
+	var light = new THREE.AmbientLight(0x333333);
+	scene.add(light);
 
 	renderer = new THREE.WebGLRenderer({antialias: true});
 	renderer.setSize(window.innerWidth, window.innerHeight);
@@ -53,13 +56,19 @@ function init() {
 	
 	controls = new THREE.EditorControls(camera);
 	
+	document.body.appendChild(renderer.domElement);
+	
 	codeButton.addEventListener('click', handle_codeButton_CLICK);
 	helpButton.addEventListener('click', handle_helpButton_CLICK);
 	loadButton.addEventListener('click', handle_loadButton_CLICK);
 	saveButton.addEventListener('click', handle_saveButton_CLICK);
 	fileInput.addEventListener('change', handle_LOAD);
 	
-	document.body.appendChild(renderer.domElement);
+	document.body.addEventListener('dragover', handle_DRAG_OVER);
+	document.body.addEventListener('dragenter', handle_DRAG_ENTER);
+	document.body.addEventListener('dragleave', handle_DRAG_LEAVE);
+	document.body.addEventListener('drop', handle_DROP);
+	
 	document.addEventListener('mousedown', handle_MOUSE_DOWN);
 	document.addEventListener('mouseup', handle_MOUSE_UP);
 	document.addEventListener('mousemove', handle_MOUSE_MOVE);
@@ -67,6 +76,56 @@ function init() {
 	document.addEventListener('keydown', handle_KEY_DOWN);
 	document.addEventListener('keyup', handle_KEY_UP);
 	setInterval(KEY_CHECK, 100);
+}
+
+function handle_DRAG_OVER(e) {
+	e.preventDefault();
+	console.log('drag over');
+}
+
+function handle_DRAG_ENTER(e) {
+	console.log('drag enter');
+}
+
+function handle_DRAG_LEAVE(e) {
+	console.log('drag leave');
+}
+
+function handle_DROP(e) {
+	e.preventDefault();
+	console.log('drop');
+
+	var reader = new FileReader();
+	reader.addEventListener('load', handle_MODEL_LOAD);
+	reader.readAsText(e.dataTransfer.files[0]);
+}
+
+function handle_MODEL_LOAD(e) {
+	var contentString,
+		content,
+		loader,
+		model,
+		mesh,
+		color;
+	
+	contentString = e.target.result;
+	content = JSON.parse(contentString);
+	
+	loader = new THREE.JSONLoader();
+	model = loader.parse(content);
+	
+	for (i = 0; i < model.materials.length; i += 1) {
+		color = new THREE.Color(0xffffff);
+		color.setRGB(Math.random(), Math.random(), Math.random());
+		model.materials[i] = new THREE.MeshLambertMaterial({ambient: color, color: color, side: THREE.DoubleSide});
+	}
+	mesh = new THREE.Mesh(model.geometry, new THREE.MeshFaceMaterial(model.materials));
+	mesh.scale.set(40, 40, 40);
+	scene.add(mesh);
+}
+
+function handle_MODEL_COMPLETE(e) {
+	
 }
 
 function handle_loadButton_CLICK(e) {
@@ -78,8 +137,7 @@ function handle_loadButton_CLICK(e) {
 function handle_LOAD(e) {
 	var reader = new FileReader();
 	reader.addEventListener('load', handle_FILE_LOAD);
-	reader.readAsText(e.target.files[0]);
-    
+	reader.readAsText(e.target.files[0]); 
 }
 
 function handle_FILE_LOAD(e) {
