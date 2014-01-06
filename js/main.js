@@ -349,7 +349,7 @@ function drawPath() {
 		}
 	}
 	
-	geometry = new THREE.TubeGeometry(path, 100, 3, 20, false, false);
+	geometry = new THREE.TubeGeometry(path, vertices.length * 20, 3, 20, false, false);
 	mat = new THREE.MeshBasicMaterial({color: 0xccc000, wireframe: true});
 	mesh = new THREE.Mesh(geometry, mat);
 	scene.add(mesh);
