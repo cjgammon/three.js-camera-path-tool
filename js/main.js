@@ -393,7 +393,6 @@ function drawPath() {
 	
 	path = new THREE.CurvePath();
 	
-	//////////
 	/*
 	for (i = 0; i < vertices.length; i += 1) {
 		splineVectors.push(vertices[i].v);
@@ -402,13 +401,14 @@ function drawPath() {
 	path.add(new THREE.Spline(splineVectors));
 	*/
 	
+	
 	for (i = 0; i < vertices.length; i += 1) {
 		splineVectors.push(vertices[i].v);
 		j += 1;
 		
 		if (j == 6) {
 			j = 1;
-			spline = new THREE.Spline(splineVectors);
+			spline = new THREE.SplineCurve3(splineVectors);
 			path.add(spline);
 			
 			splineVectors = [];
@@ -420,6 +420,7 @@ function drawPath() {
 	mat = new THREE.MeshBasicMaterial({color: 0xccc000, wireframe: true});
 	mesh = new THREE.Mesh(geometry, mat);
 	scene.add(mesh);
+	
 }
 
 function generatePathCode() {
