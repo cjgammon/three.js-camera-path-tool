@@ -393,13 +393,22 @@ function drawPath() {
 	
 	path = new THREE.CurvePath();
 	
+	//////////
+	/*
+	for (i = 0; i < vertices.length; i += 1) {
+		splineVectors.push(vertices[i].v);
+	}
+	
+	path.add(new THREE.Spline(splineVectors));
+	*/
+	
 	for (i = 0; i < vertices.length; i += 1) {
 		splineVectors.push(vertices[i].v);
 		j += 1;
 		
 		if (j == 6) {
 			j = 1;
-			spline = new THREE.SplineCurve3(splineVectors);
+			spline = new THREE.Spline(splineVectors);
 			path.add(spline);
 			
 			splineVectors = [];
