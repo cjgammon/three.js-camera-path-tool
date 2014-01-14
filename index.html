@@ -69,6 +69,35 @@
 			#fileInput{
 				display: none;
 			}
+			
+			#nodeDetails{
+				position: fixed;
+				bottom: 0;
+				left: 0;
+				width: 70px;
+				padding: .5em;
+				color: white;
+				font-family: sans-serif;
+				background: rgba(0, 0, 0, 0.5);
+			}
+			
+			#sliderHolder{
+				display: none;
+				position: fixed;
+				bottom: 0;
+				left: 200px;
+				width: 300px;
+				height: 20px;
+				background: rgba(255, 0, 0, 0.5);
+			}
+			
+			#slider{
+				position: absolute;
+				height: 20px;
+				width: 20px;
+				background: rgba(0, 0, 0, 0.5);
+				cursor: pointer;
+			}
 		</style>
 	</head>
 	<body>
@@ -95,6 +124,12 @@
 				</small>
 			</div>
 		</div>
+		
+		<div id="sliderHolder">
+			<div id="slider"></div>
+		</div>
+		
+		<div id="nodeDetails"></div>
 		
 		<div id="code">
 			<button id="codeButton" class="button">Select</button>

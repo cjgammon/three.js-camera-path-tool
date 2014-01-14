@@ -22,9 +22,14 @@ var camera,
 	loadButton = document.getElementById('loadButton'),
 	saveButton = document.getElementById('saveButton'),
 	fileInput = document.getElementById('fileInput'),
+	sliderHolder = document.getElementById('sliderHolder'),
+	slider = document.getElementById('slider'),
+	SLIDER_DRAGGING = false,
 	windowHalfX = window.innerWidth / 2,
 	windowHalfY = window.innerHeight / 2,
 	keys = [],
+	delta = 0,
+	ANIMATE = true,
 	SHIFT = false,
 	OPT = false,
 	mouse = {x: 0, y: 0, z: 0};
@@ -66,6 +71,9 @@ function init() {
 	saveButton.addEventListener('click', handle_saveButton_CLICK);
 	fileInput.addEventListener('change', handle_LOAD);
 	
+	slider.addEventListener('mousedown', handle_slider_MOUSE_DOWN);
+	sliderHolder.addEventListener('mousemove', handle_sliderHolder_MOUSE_MOVE);
+	
 	document.body.addEventListener('dragover', handle_DRAG_OVER);
 	document.body.addEventListener('dragenter', handle_DRAG_ENTER);
 	document.body.addEventListener('dragleave', handle_DRAG_LEAVE);
@@ -78,6 +86,27 @@ function init() {
 	document.addEventListener('keydown', handle_KEY_DOWN);
 	document.addEventListener('keyup', handle_KEY_UP);
 	setInterval(KEY_CHECK, 100);
+}
+
+function handle_slider_MOUSE_DOWN(e) {
+	SLIDER_DRAGGING = true;
+}
+
+function handle_sliderHolder_MOUSE_MOVE(e) {
+	var _x;
+	
+	if (SLIDER_DRAGGING) {
+		_x = e.pageX - sliderHolder.offsetLeft;
+		if (_x > sliderHolder.offsetWidth - slider.offsetWidth) {
+			_x = sliderHolder.offsetWidth - slider.offsetWidth;
+		} else if (_x < 0) {
+			_x = sliderHolder.offsetLeft
+		}
+		slider.style.left = _x + 'px';
+		
+		delta = _x / (sliderHolder.offsetWidth - slider.offsetWidth);
+		printNodeData();
+	}
 }
 
 function handle_DRAG_OVER(e) {
@@ -121,6 +150,7 @@ function handle_MODEL_LOAD(e) {
 		color.setRGB(Math.random(), Math.random(), Math.random());
 		model.materials[i] = new THREE.MeshLambertMaterial({ambient: color, color: color, side: THREE.DoubleSide, shading: THREE.FlatShading});
 	}
+	
 	mesh = new THREE.Mesh(model.geometry, new THREE.MeshFaceMaterial(model.materials));
 	mesh.scale.set(40, 40, 40);
 	scene.add(mesh);
@@ -147,7 +177,7 @@ function handle_FILE_LOAD(e) {
 		content;
 		
 	contentString = e.target.result;
-	content = JSON.parse('{"vertices":' + contentString + '}');
+	content = JSON.parse(contentString);
 	
 	loadPath(content.vertices);
 	drawPath();
@@ -159,7 +189,7 @@ function handle_saveButton_CLICK(e) {
 		blob,
 		i;
 	
-	filestring += '[\n';
+	filestring += '{"vertices": [\n';
 	
 	for (i = 0; i < vertices.length; i += 1) {
 		filestring += '{"x": ' + vertices[i].x + ', "y": ' + vertices[i].y  + ', "z": ' + vertices[i].z + '}';
@@ -171,10 +201,10 @@ function handle_saveButton_CLICK(e) {
 		}
 	}
 	
-	filestring += ']';
+	filestring += ']}';
 	
 	blob = new Blob([filestring], {type: "text/plain;charset=utf-8"});
-	saveAs(blob, "path.txt");
+	saveAs(blob, "path.json");
 }
 
 function handle_codeButton_CLICK(e) {
@@ -209,13 +239,14 @@ function handle_MOUSE_DOWN(e) {
 		resetSelected();
 		intersects[0].object.material.color.setHex(0x0000cc);
 		selectedHandle = intersects[0].object;
+		printNodeData();
 	} else {
 		resetSelected();
 	}
 }
 
 function handle_MOUSE_UP(e) {
-
+	SLIDER_DRAGGING = false;
 }
 
 function handle_MOUSE_MOVE(e) {
@@ -261,6 +292,13 @@ function handle_KEY_DOWN(e) {
 		break;
 	case 32: //SPACE
 		//TOGGLE CAMERA
+		if (sliderHolder.style.display == 'block') {
+			sliderHolder.style.display = 'none';
+			ANIMATE = true;
+		} else {
+			sliderHolder.style.display = 'block';
+			ANIMATE = false;
+		}
 		break;
 	}
 }
@@ -477,24 +515,43 @@ function positionPathCamera() {
 		pos, 
 		dir, 
 		normal,
+		binormal,
+		segments,
+		pickt,
+		pick,
+		pickNext,
 		pathLength;
 	
-	time = Date.now();
-	looptime = 20 * 1000;
-	t = ( time % looptime ) / looptime;
+	if (ANIMATE !== false) {
+		time = Date.now();
+		looptime = 20 * 1000;
+		t = ( time % looptime ) / looptime;	
+	} else {
+		t = delta;
+	}
 	
 	pos = geometry.path.getPointAt(t);
 	dir = geometry.path.getTangentAt(t);
-	normal = new THREE.Vector3();
+	normal = new THREE.Vector3(0, 0, 1);
+	binormal = new THREE.Vector3();
+	
+	segments = geometry.tangents.length;
+	pickt = t * segments;
+	pick = Math.floor(pickt);
+	pickNext = (pick + 1) % segments;
+
+	binormal.subVectors(geometry.binormals[pickNext], geometry.binormals[pick]);
+	binormal.multiplyScalar(pickt - pick).add(geometry.binormals[pick]);
+	normal.copy(binormal).cross(dir).multiplyScalar(-1);
 
 	pathCamera.position = pos;
 	
 	pathLength = geometry.path.getLength();
-	lookAt = geometry.path.getPointAt( ( t + 30 / pathLength ) % 1 );
+	lookAt = geometry.path.getPointAt((t + 30 / pathLength) % 1);
 		
-	lookAt.copy( pos ).add( dir );
+	lookAt.copy(pos).add(dir);
 	pathCamera.matrix.lookAt(pathCamera.position, lookAt, normal);
-	pathCamera.rotation.setEulerFromRotationMatrix( pathCamera.matrix, pathCamera.eulerOrder );
+	pathCamera.rotation.setEulerFromRotationMatrix(pathCamera.matrix, pathCamera.eulerOrder);	
 }
 
 function positionCameraOnPath() {
@@ -504,6 +561,23 @@ function positionCameraOnPath() {
 	
 	cameraOnPath.position = pathCamera.position;
 	cameraOnPath.rotation = pathCamera.rotation;
+}
+
+function printNodeData() {
+	var el = document.getElementById('nodeDetails');
+	
+	el.innerHTML = '';
+	
+	if (ANIMATE !== false) {
+		el.innerHTML += 'x: ' + selectedHandle.position.x + '<br/>';
+		el.innerHTML += 'y: ' + selectedHandle.position.y + '<br/>';
+		el.innerHTML += 'z: ' + selectedHandle.position.z + '<br/>';
+	} else {
+		el.innerHTML += 'camera <br/>';
+		el.innerHTML += 'x: ' + Math.round(pathCamera.position.x) + '<br/>';
+		el.innerHTML += 'y: ' + Math.round(pathCamera.position.y) + '<br/>';
+		el.innerHTML += 'z: ' + Math.round(pathCamera.position.z) + '<br/>';	
+	}
 }
 
 function render() {
