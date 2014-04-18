@@ -14,6 +14,7 @@ var camera,
 	verticeHandles = [],
 	segments = [],
 	selectedHandle,
+	pixelRatio = window.devicePixelRatio,
 	codeElement = document.getElementById('code'),
 	codeCopyElement = document.getElementById('codeCopy'),
 	uiElement = document.getElementById('ui'),
@@ -582,14 +583,14 @@ function render() {
 	positionPathCamera();
 	positionCameraOnPath();
 	
-	renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
-	renderer.setScissor(0, 0, window.innerWidth, window.innerHeight);
+	renderer.setViewport(0, 0, window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
+	renderer.setScissor(0, 0, window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
 	renderer.enableScissorTest(true);
 	renderer.setClearColor(0xffffff);
 	renderer.render(scene, camera);	
 	
-	renderer.setViewport((window.innerWidth) - 250, 0, 250, 150);
-	renderer.setScissor((window.innerWidth) - 250, 0, 250, 150);
+	renderer.setViewport((window.innerWidth * pixelRatio) - 250 * pixelRatio, 0, 250 * pixelRatio, 150 * pixelRatio);
+	renderer.setScissor((window.innerWidth * pixelRatio) - 250 * pixelRatio, 0, 250 * pixelRatio, 150 * pixelRatio);
 	renderer.enableScissorTest(true);
 	renderer.setClearColor(0x111115, 0.1);
 	renderer.render(scene, pathCamera);
