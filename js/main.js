@@ -25,8 +25,6 @@ var camera,
 	sliderHolder = document.getElementById('sliderHolder'),
 	slider = document.getElementById('slider'),
 	SLIDER_DRAGGING = false,
-	windowHalfX = window.innerWidth / 2,
-	windowHalfY = window.innerHeight / 2,
 	keys = [],
 	delta = 0,
 	ANIMATE = true,
@@ -584,17 +582,18 @@ function render() {
 	positionPathCamera();
 	positionCameraOnPath();
 	
-	renderer.setViewport(0, 0, window.innerWidth * 2, window.innerHeight * 2);
-	renderer.setScissor(0, 0, window.innerWidth * 2, window.innerHeight * 2);
+	renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
+	renderer.setScissor(0, 0, window.innerWidth, window.innerHeight);
 	renderer.enableScissorTest(true);
 	renderer.setClearColor(0xffffff);
 	renderer.render(scene, camera);	
 	
-	renderer.setViewport((window.innerWidth * 2) - 500, 0, 500, 300);
-	renderer.setScissor((window.innerWidth * 2) - 500, 0, 500, 300);
+	renderer.setViewport((window.innerWidth) - 250, 0, 250, 150);
+	renderer.setScissor((window.innerWidth) - 250, 0, 250, 150);
 	renderer.enableScissorTest(true);
 	renderer.setClearColor(0x111115, 0.1);
 	renderer.render(scene, pathCamera);
+	
 }
 
 function animate() {
