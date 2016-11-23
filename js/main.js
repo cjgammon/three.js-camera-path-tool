@@ -1,5 +1,6 @@
 var camera, 
 	scene, 
+	scene2,
 	renderer, 
 	projector,
 	mesh,
@@ -27,16 +28,33 @@ var camera,
 	slider = document.getElementById('slider'),
 	SLIDER_DRAGGING = false,
 	keys = [],
+	vr = true,
+	effect,
+	controller1,
+	controller2,
 	delta = 0,
 	ANIMATE = true,
 	SHIFT = false,
 	OPT = false,
+	renderer2,
+	group,
+	tv,
+	tvmaterial,
+	cameraTexture,
+	cameraCanvas,
+	tempMatrix = new THREE.Matrix4(),
 	mouse = {x: 0, y: 0, z: 0};
 
 init();
 animate();
 
 function init() {
+
+	if ( vr == true && WEBVR.isAvailable() === false ) {
+		document.body.appendChild( WEBVR.getMessage() );
+		vr = false;
+	}
+
   	projector = new THREE.Projector();
 
 	camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.01, 10000);
@@ -45,7 +63,10 @@ function init() {
 	pathCamera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.01, 1000);
 	pathCamera.position.set(0, 50, 500);
 
+	scene2 = new THREE.Scene();
+
 	scene = new THREE.Scene();
+	scene.add(camera);
 
 	var light = new THREE.DirectionalLight(0xffffff);
 	light.position.set(0, 0, 1);
@@ -54,13 +75,95 @@ function init() {
 	var light = new THREE.AmbientLight(0x333333);
 	scene.add(light);
 
-	renderer = new THREE.WebGLRenderer({antialias: true});
+	renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
 	renderer.setSize(window.innerWidth, window.innerHeight);
-	
+	renderer.setPixelRatio( window.devicePixelRatio );
+	renderer.setClearColor(0xefefef);
+
+	group = new THREE.Group();
+	scene.add( group );
+
 	var axis = new THREE.AxisHelper(75);
 	scene.add(axis);
-	
-	controls = new THREE.EditorControls(camera);
+
+	///camera
+	cameraCanvas = document.createElement('canvas');
+	cameraCanvas.height = cameraCanvas.width = 512;
+
+	renderer2 = new THREE.WebGLRenderer({antialias: true, alpha: true, canvas: cameraCanvas});
+	renderer2.setSize(window.innerWidth, window.innerHeight);
+	renderer2.setPixelRatio( window.devicePixelRatio );
+	renderer2.setClearColor(0xefefef);
+
+	cameraTexture = new THREE.Texture(cameraCanvas);
+	cameraTexture.minFilter = THREE.LinearFilter
+	tvmaterial = new THREE.SpriteMaterial({map: cameraTexture, transparent: true, opacity: 0});
+	tv = new THREE.Sprite(tvmaterial);
+	tv.scale.set(0.5, 0.25, 1);
+	tv.position.set(0, 0, -1);
+	camera.add(tv);
+
+
+	if (vr == true) {
+		controls = new THREE.VRControls( camera );
+		controls.standing = true;
+
+		controller1 = new THREE.ViveController( 0 );
+		controller1.standingMatrix = controls.getStandingMatrix();
+		controller1.addEventListener( 'gripsdown', onGripDown );
+		controller1.addEventListener( 'gripsup', onGripUp );
+		controller1.addEventListener( 'thumbpaddown', onThumbPadDown );
+		controller1.addEventListener( 'triggerdown', onTriggerDown );
+		controller1.addEventListener( 'triggerup', onTriggerUp );
+		scene.add( controller1 );
+
+		controller2 = new THREE.ViveController( 1 );
+		controller2.standingMatrix = controls.getStandingMatrix();
+		controller2.addEventListener( 'gripsdown', onGripDown );
+		controller2.addEventListener( 'gripsup', onGripUp );
+		controller2.addEventListener( 'thumbpaddown', onThumbPadDown );
+		controller2.addEventListener( 'triggerdown', onTriggerDown );
+		controller2.addEventListener( 'triggerup', onTriggerUp );
+		scene.add( controller2 );
+
+		var loader = new THREE.OBJLoader();
+		loader.setPath( 'models/obj/vive-controller/' );
+		loader.load( 'vr_controller_vive_1_5.obj', function ( object ) {
+
+			var loader = new THREE.TextureLoader();
+			loader.setPath( 'models/obj/vive-controller/' );
+
+			var controller = object.children[ 0 ];
+			controller.material.map = loader.load( 'onepointfive_texture.png' );
+			controller.material.specularMap = loader.load( 'onepointfive_spec.png' );
+
+			controller1.add( object.clone() );
+			controller2.add( object.clone() );
+
+		} );
+
+		var geometry = new THREE.Geometry();
+		geometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
+		geometry.vertices.push( new THREE.Vector3( 0, 0, - 1 ) );
+
+		var line = new THREE.Line( geometry );
+		line.name = 'line';
+		line.scale.z = 5;
+
+		controller1.add( line.clone() );
+		controller2.add( line.clone() );
+
+		raycaster = new THREE.Raycaster();
+
+		effect = new THREE.VREffect( renderer );
+
+		if ( WEBVR.isAvailable() === true ) {
+			document.body.appendChild( WEBVR.getButton( effect ) );
+		}
+
+	} else {
+		controls = new THREE.EditorControls(camera);
+	}
 	
 	document.body.appendChild(renderer.domElement);
 	
@@ -86,6 +189,128 @@ function init() {
 	document.addEventListener('keyup', handle_KEY_UP);
 	setInterval(KEY_CHECK, 100);
 }
+
+
+	function onGripDown(event) {
+		tvmaterial.opacity = 1;
+		tvmaterial.needsUpdate = true;
+	}
+
+	function onGripUp(event) {
+		tvmaterial.opacity = 0;
+		tvmaterial.needsUpdate = true;
+	}
+
+
+	var dragging;
+
+	function onThumbPadDown(event) {
+		if (vertices.length == 0) {
+			addPath(6);	
+		} else {
+			addPath(5);
+		}
+		drawPath();
+		generatePathCode();
+	}
+
+	function onTriggerDown( event ) {
+
+				var controller = event.target;
+
+				var intersections = getIntersections( controller );
+
+				if ( intersections.length > 0 ) {
+
+					var intersection = intersections[ 0 ];
+
+					tempMatrix.getInverse( controller.matrixWorld );
+
+					var object = intersection.object;
+					object.matrix.premultiply( tempMatrix );
+					object.matrix.decompose( object.position, object.quaternion, object.scale );
+					controller.add( object );
+
+					controller.userData.selected = object;
+
+					resetSelected();
+					intersection.object.material.color.setHex(0x0000cc);
+					selectedHandle = intersection.object;
+
+				}
+
+	}
+
+			function onTriggerUp( event ) {
+
+				var controller = event.target;
+
+				if ( controller.userData.selected !== undefined ) {
+
+					var object = controller.userData.selected;
+					object.matrix.premultiply( controller.matrixWorld );
+					object.matrix.decompose( object.position, object.quaternion, object.scale );
+					group.add( object );
+
+					controller.userData.selected = undefined;
+
+	
+
+					selectedHandle.obj.update();
+
+				}
+
+
+			}
+
+			function getIntersections( controller ) {
+
+				tempMatrix.identity().extractRotation( controller.matrixWorld );
+
+				raycaster.ray.origin.setFromMatrixPosition( controller.matrixWorld );
+				raycaster.ray.direction.set( 0, 0, -1 ).applyMatrix4( tempMatrix );
+
+				return raycaster.intersectObjects( group.children );
+
+			}
+
+			function intersectObjects( controller ) {
+
+				// Do not highlight when already selected
+
+				if ( controller.userData.selected !== undefined ) return;
+
+				var line = controller.getObjectByName( 'line' );
+				var intersections = getIntersections( controller );
+
+				if ( intersections.length > 0 ) {
+
+					var intersection = intersections[ 0 ];
+
+					var object = intersection.object;
+					//object.material.emissive.r = 1;
+					intersected.push( object );
+
+					line.scale.z = intersection.distance;
+
+				} else {
+
+					line.scale.z = 5;
+
+				}
+
+			}
+
+			function cleanIntersected() {
+
+				while ( intersected.length ) {
+
+					var object = intersected.pop();
+					//object.material.emissive.r = 0;
+
+				}
+
+			}
 
 function handle_slider_MOUSE_DOWN(e) {
 	SLIDER_DRAGGING = true;
@@ -151,7 +376,7 @@ function handle_MODEL_LOAD(e) {
 	}
 	
 	mesh = new THREE.Mesh(model.geometry, new THREE.MeshFaceMaterial(model.materials));
-	mesh.scale.set(40, 40, 40);
+	mesh.scale.set(0.1, 0.1, 0.1);
 	scene.add(mesh);
 }
 
@@ -229,7 +454,8 @@ function handle_MOUSE_DOWN(e) {
 		intersects;
 	
 	vector = new THREE.Vector3((e.clientX / window.innerWidth) * 2 - 1, - (e.clientY / window.innerHeight) * 2 + 1, 0.5);
-	projector.unprojectVector(vector, camera);
+	//projector.unprojectVector(vector, camera);
+	vector.unproject(camera);
 
 	raycaster = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
 	intersects = raycaster.intersectObjects(verticeHandles);
@@ -388,7 +614,7 @@ function addPath(count) {
 	var i;
 	
 	for (i = 0; i < count; i += 1) {
-		vert = new Vert(Math.floor(Math.random() * 200), Math.floor(Math.random() * 200), Math.floor(Math.random() * 200));
+		vert = new Vert(Math.floor(-0.5 + Math.random() * 2), 0.5 + Math.floor(Math.random() * 2), Math.floor(-0.5 + Math.random() * 1));
 		vert.mesh.obj = vert;
 		vertices.push(vert);
 		verticeHandles.push(vert.mesh);
@@ -438,11 +664,11 @@ function drawPath() {
 		splineVectors.push(vertices[i].v);
 	}
 	
-	spline = new THREE.SplineCurve3(splineVectors);
+	spline = new THREE.CatmullRomCurve3(splineVectors);
 	path.add(spline);
 		
-	geometry = new THREE.TubeGeometry(path, vertices.length * 20, 3, 20, false, false);
-	mat = new THREE.MeshBasicMaterial({color: 0xccc000, wireframe: true});
+	geometry = new THREE.TubeGeometry(path, vertices.length * 20, 0.01, 20);
+	mat = new THREE.MeshBasicMaterial({color: 0xccc000, wireframe: true, transparent: true});
 	mesh = new THREE.Mesh(geometry, mat);
 	scene.add(mesh);
 	
@@ -452,7 +678,7 @@ function drawPath() {
 }
 
 function addCameraToPath() {
-	var g = new THREE.SphereGeometry(5, 5),
+	var g = new THREE.SphereGeometry(0.02, 5),
 		m = new THREE.MeshBasicMaterial({color: 0xff0000});
 		
 	cameraOnPath = new THREE.Mesh(g, m);
@@ -503,6 +729,7 @@ function generatePathCode() {
 }
 
 function positionPathCamera() {
+
 	if (vertices.length == 0) {
 		return;
 	}
@@ -529,8 +756,8 @@ function positionPathCamera() {
 		t = delta;
 	}
 	
-	pos = geometry.path.getPointAt(t);
-	dir = geometry.path.getTangentAt(t);
+	pos = geometry.parameters.path.getPointAt(t);
+	dir = geometry.parameters.path.getTangentAt(t);
 	normal = new THREE.Vector3(0, 0, 1);
 	binormal = new THREE.Vector3();
 	
@@ -543,14 +770,16 @@ function positionPathCamera() {
 	binormal.multiplyScalar(pickt - pick).add(geometry.binormals[pick]);
 	normal.copy(binormal).cross(dir).multiplyScalar(-1);
 
-	pathCamera.position = pos;
-	
-	pathLength = geometry.path.getLength();
-	lookAt = geometry.path.getPointAt((t + 30 / pathLength) % 1);
+	pathCamera.position.set(pos.x, pos.y, pos.z);
+
+	pathLength = geometry.parameters.path.getLength();
+	lookAt = geometry.parameters.path.getPointAt((t + 30 / pathLength) % 1);
 		
 	lookAt.copy(pos).add(dir);
 	pathCamera.matrix.lookAt(pathCamera.position, lookAt, normal);
-	pathCamera.rotation.setEulerFromRotationMatrix(pathCamera.matrix, pathCamera.eulerOrder);	
+
+	var euler = new THREE.Euler().setFromRotationMatrix(pathCamera.matrix, pathCamera.rotation.order);
+	pathCamera.rotation.set(euler.x, euler.y, euler.z);
 }
 
 function positionCameraOnPath() {
@@ -558,8 +787,9 @@ function positionCameraOnPath() {
 		return;
 	}
 	
-	cameraOnPath.position = pathCamera.position;
-	cameraOnPath.rotation = pathCamera.rotation;
+	cameraOnPath.position.set(pathCamera.position.x, pathCamera.position.y, pathCamera.position.z);
+	cameraOnPath.rotation.set(pathCamera.rotation.x, pathCamera.rotation.y, pathCamera.rotation.z);
+
 }
 
 function printNodeData() {
@@ -582,23 +812,48 @@ function printNodeData() {
 function render() {
 	positionPathCamera();
 	positionCameraOnPath();
-	
-	renderer.setViewport(0, 0, window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
-	renderer.setScissor(0, 0, window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
-	renderer.enableScissorTest(true);
-	renderer.setClearColor(0xffffff);
-	renderer.render(scene, camera);	
-	
-	renderer.setViewport((window.innerWidth * pixelRatio) - 250 * pixelRatio, 0, 250 * pixelRatio, 150 * pixelRatio);
-	renderer.setScissor((window.innerWidth * pixelRatio) - 250 * pixelRatio, 0, 250 * pixelRatio, 150 * pixelRatio);
-	renderer.enableScissorTest(true);
-	renderer.setClearColor(0x111115, 0.1);
-	renderer.render(scene, pathCamera);
+
+
+	if (vr) {
+		controller1.update();
+		controller2.update();
+
+		controls.update();
+
+		if (mat) {
+			mat.opacity = 1;
+		}
+
+		effect.render( scene, camera );
+
+		if (mat) {
+			mat.opacity = 0;
+		}
+		
+		cameraTexture.needsUpdate = true;
+		renderer2.render(scene, pathCamera);
+	} else {
+		renderer.setViewport(0, 0, window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
+		renderer.setScissor(0, 0, window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
+		renderer.enableScissorTest(true);
+		renderer.setClearColor(0xffffff);
+		renderer.render(scene, camera);	
+		
+		renderer.setViewport((window.innerWidth * pixelRatio) - 250 * pixelRatio, 0, 250 * pixelRatio, 150 * pixelRatio);
+		renderer.setScissor((window.innerWidth * pixelRatio) - 250 * pixelRatio, 0, 250 * pixelRatio, 150 * pixelRatio);
+		renderer.enableScissorTest(true);
+		renderer.setClearColor(0x111115, 0.1);
+		renderer.render(scene, pathCamera);
+	}
 	
 }
 
 function animate() {
-	requestAnimationFrame(animate);
+	if (effect) {
+		effect.requestAnimationFrame( animate );
+	} else {
+		requestAnimationFrame(animate);
+	}
 	render();
 }
 
@@ -612,11 +867,11 @@ var Vert = function (x, y, z) {
 	this.z = z;
 	this.v = new THREE.Vector3(this.x, this.y, this.z);
 	
-	sphere = new THREE.SphereGeometry(10, 10, 10);
-	material = new THREE.MeshBasicMaterial({color: 0x00cc00, wireframe: true});
+	sphere = new THREE.SphereGeometry(0.05, 10, 10);
+	material = new THREE.MeshBasicMaterial({color: 0x00cc00, transparent: true, opacity: 0.5});
 	this.mesh = new THREE.Mesh(sphere, material);
 	this.mesh.position.set(this.x, this.y, this.z);
-	scene.add(this.mesh);
+	group.add(this.mesh);
 	
 	this.update = function () {
 		instance.x = instance.mesh.position.x;
