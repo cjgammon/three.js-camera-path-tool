@@ -258,6 +258,8 @@ function init() {
 
 					selectedHandle.obj.update();
 
+					drawPath();
+
 				}
 
 
@@ -879,7 +881,7 @@ var Vert = function (x, y, z) {
 		instance.z = instance.mesh.position.z;
 		
 		instance.v = new THREE.Vector3(instance.x, instance.y, instance.z);
-		drawPath();
+		//drawPath();
 		generatePathCode();
 	}
 }
